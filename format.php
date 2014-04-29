@@ -15,7 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
 /**
  * Convert Moodle Question XML into HTML table format
  *
@@ -82,50 +81,51 @@ class qformat_htmltable extends qformat_xml {
         // override method to allow us convert to XHTML format
         global $CFG, $USER;
         global $OUTPUT;
-        // declare empty array to prevent each debug message from including a complete backtrace
-        $backtrace = array();
 
-        debugging("presave_process(content = " . str_replace("\n", " ", substr($content, 80, 50)) . "):", DEBUG_DEVELOPER, $backtrace);
+        debugging(__FUNCTION__ . ":" . __LINE__ . ": content = " . str_replace("\n", " ", substr($content, 80, 50)) . "):", DEBUG_DEVELOPER);
 
         // XSLT stylesheet to convert Moodle Question XML into XHTML format
         $stylesheet = dirname(__FILE__) . "/" . $this->mqxml2html_stylesheet1;
         // XHTML template for XHTML file CSS styles formatting
-        $htmltemplatefile_url = dirname(__FILE__) . "/" . $this->htmlfile_template;
-        $iconfile_url = dirname(__FILE__) . "/" . $this->question_icons;
+        $htmltemplatefile_path = dirname(__FILE__) . "/" . $this->htmlfile_template;
+        $iconfile_path = dirname(__FILE__) . "/" . $this->question_icons;
 
         // Check that XSLT is installed, and the XSLT stylesheet and XHTML template are present
         if (!class_exists('XSLTProcessor') || !function_exists('xslt_create')) {
-            debugging("presave_process(): XSLT not installed", DEBUG_DEVELOPER, $backtrace);
+            debugging(__FUNCTION__ . ":" . __LINE__ . ": XSLT not installed", DEBUG_DEVELOPER);
             echo $OUTPUT->notification(get_string('xsltunavailable', 'qformat_htmltable'));
             return false;
         } else if(!file_exists($stylesheet)) {
             // XSLT stylesheet to transform Moodle Question XML into XHTML doesn't exist
-            debugging("presave_process(): XSLT stylesheet missing: $stylesheet", DEBUG_DEVELOPER, $backtrace);
+            debugging(__FUNCTION__ . ":" . __LINE__ . ": XSLT stylesheet missing: $stylesheet", DEBUG_DEVELOPER);
             echo $OUTPUT->notification(get_string('stylesheetunavailable', 'qformat_htmltable', $stylesheet));
             return false;
         }
 
         // Check that there is some content to convert into XHTML
         if (!strlen($content)) {
-            debugging("presave_process(): No XML questions in category", DEBUG_DEVELOPER, $backtrace);
+            debugging(__FUNCTION__ . ":" . __LINE__ . ": No XML questions in category", DEBUG_DEVELOPER);
             echo $OUTPUT->notification(get_string('noquestions', 'qformat_htmltable'));
             return false;
         }
 
+        debugging(__FUNCTION__ . ":" . __LINE__ . ": preflight checks complete, xmldata length = " . strlen($content), DEBUG_DEVELOPER);
+
         // Create a temporary file to store the XML content to transform
-        if (!($temp_xml_filename = tempnam($CFG->dataroot . "/temp/", "m2w-"))) {
-            debugging("presave_process(): Cannot open temporary file ('$temp_xml_filename') to store XML", DEBUG_DEVELOPER, $backtrace);
+        if (!($temp_xml_filename = tempnam($CFG->dataroot . "/temp/", "ht1-"))) {
+            debugging(__FUNCTION__ . ":" . __LINE__ . ": Cannot open temporary file ('$temp_xml_filename') to store XML", DEBUG_DEVELOPER);
             echo $OUTPUT->notification(get_string('cannotopentempfile', 'qformat_htmltable', $temp_xml_filename));
             return false;
         }
 
+         $clean_content = $this->clean_all_questions($content);
         // Write the XML contents to be transformed, and also include labels and icons data, to avoid having to use document() inside XSLT
-        if (($nbytes = file_put_contents($temp_xml_filename, "<container><quiz>" . $content . "</quiz>" . $this->get_text_labels() . file_get_contents($iconfile_url) . "</container>")) == 0) {
-            debugging("presave_process(): Failed to save XML data to temporary file ('$temp_xml_filename')", DEBUG_DEVELOPER, $backtrace);
+        if (($nbytes = file_put_contents($temp_xml_filename, "<container>\n<quiz>" . $clean_content . "\n</quiz>\n" . $this->get_text_labels() . file_get_contents($iconfile_path) . "</container>")) == 0) {
+            debugging(__FUNCTION__ . ":" . __LINE__ . ": Failed to save XML data to temporary file ('$temp_xml_filename')", DEBUG_DEVELOPER);
             echo $OUTPUT->notification(get_string('cannotwritetotempfile', 'qformat_htmltable', $temp_xml_filename . "(" . $nbytes . ")"));
             return false;
         }
-        debugging("presave_process(): XML data saved to $temp_xml_filename", DEBUG_DEVELOPER, $backtrace);
+        debugging(__FUNCTION__ . ":" . __LINE__ . ": XML data saved to $temp_xml_filename", DEBUG_DEVELOPER);
 
         // Set parameters for XSLT transformation. Note that we cannot use arguments though
         $parameters = array (
@@ -134,35 +134,36 @@ class qformat_htmltable extends qformat_xml {
             'moodle_release' => $CFG->release
         );
 
-        debugging("presave_process(): Calling XSLT Pass 1 with stylesheet \"" . $stylesheet . "\"", DEBUG_DEVELOPER, $backtrace);
+        debugging(__FUNCTION__ . ":" . __LINE__ . ": Calling XSLT Pass 1 with stylesheet \"" . $stylesheet . "\"", DEBUG_DEVELOPER);
         $xsltproc = xslt_create();
         if(!($xslt_output = xslt_process($xsltproc, $temp_xml_filename, $stylesheet, null, null, $parameters))) {
-            debugging("presave_process(): Transformation failed", DEBUG_DEVELOPER, $backtrace);
+            debugging(__FUNCTION__ . ":" . __LINE__ . ": Transformation failed", DEBUG_DEVELOPER);
             echo $OUTPUT->notification(get_string('transformationfailed', 'qformat_htmltable', "(XSLT: " . $stylesheet . "; XML: " . $temp_xml_filename . ")"));
             $this->debug_unlink($temp_xml_filename);
             return false;
         }
         $this->debug_unlink($temp_xml_filename);
-        debugging("presave_process(): Transformation Pass 1 succeeded, XHTML output fragment = " . str_replace("\n", "", substr($xslt_output, 1, 200)), DEBUG_DEVELOPER, $backtrace);
+        debugging(__FUNCTION__ . ":" . __LINE__ . ": Transformation Pass 1 succeeded, XHTML output fragment = " . str_replace("\n", "", substr($xslt_output, 1, 200)), DEBUG_DEVELOPER);
 
-        // Write the intermediate (Pass 1) XHTML contents to be transformed in Pass 2, re-using the temporary XML file, this time including the HTML template
-        if (($nbytes = file_put_contents($temp_xml_filename, "<container>" . $xslt_output . "<htmltemplate>" . file_get_contents($htmltemplatefile_url) . "</htmltemplate></container>")) == 0) {
-            debugging("presave_process(): Failed to save XHTML data to temporary file ('$temp_xml_filename')", DEBUG_DEVELOPER, $backtrace);
+        // Write the intermediate (Pass 1) XHTML contents to be transformed in Pass 2, using a temporary XML file, this time including the HTML template
+        $temp_xml_filename = tempnam($CFG->dataroot . '/temp/', "ht2-");
+        if (($nbytes = file_put_contents($temp_xml_filename, "<container>\n" . $xslt_output . "\n<htmltemplate>\n" . file_get_contents($htmltemplatefile_path) . "\n</htmltemplate>\n</container>")) == 0) {
+            debugging(__FUNCTION__ . ":" . __LINE__ . ": Failed to save XHTML data to temporary file ('$temp_xml_filename')", DEBUG_DEVELOPER);
             echo $OUTPUT->notification(get_string('cannotwritetotempfile', 'qformat_htmltable', $temp_xml_filename . "(" . $nbytes . ")"));
             return false;
         }
-        debugging("presave_process(): Intermediate XHTML data saved to $temp_xml_filename", DEBUG_DEVELOPER, $backtrace);
+        debugging(__FUNCTION__ . ":" . __LINE__ . ": Intermediate XHTML data saved to $temp_xml_filename", DEBUG_DEVELOPER);
 
         // Prepare for Pass 2 XSLT transformation
         $stylesheet = dirname(__FILE__) . "/" . $this->mqxml2html_stylesheet2;
-        debugging("presave_process(): Calling XSLT Pass 2 with stylesheet \"" . $stylesheet . "\"", DEBUG_DEVELOPER, $backtrace);
+        debugging(__FUNCTION__ . ":" . __LINE__ . ": Calling XSLT Pass 2 with stylesheet \"" . $stylesheet . "\"", DEBUG_DEVELOPER);
         if(!($xslt_output = xslt_process($xsltproc, $temp_xml_filename, $stylesheet, null, null, $parameters))) {
-            debugging("presave_process(): Pass 2 Transformation failed", DEBUG_DEVELOPER, $backtrace);
+            debugging(__FUNCTION__ . ":" . __LINE__ . ": Pass 2 Transformation failed", DEBUG_DEVELOPER);
             echo $OUTPUT->notification(get_string('transformationfailed', 'qformat_htmltable', "(XSLT: " . $stylesheet . "; XHTML: " . $temp_xml_filename . ")"));
             $this->debug_unlink($temp_xml_filename);
             return false;
         }
-        debugging("presave_process(): Transformation Pass 2 succeeded, HTML output fragment = " . str_replace("\n", "", substr($xslt_output, 400, 100)), DEBUG_DEVELOPER, $backtrace);
+        debugging(__FUNCTION__ . ":" . __LINE__ . ": Transformation Pass 2 succeeded, HTML output fragment = " . str_replace("\n", "", substr($xslt_output, 400, 100)), DEBUG_DEVELOPER);
 
         $this->debug_unlink($temp_xml_filename);
 
@@ -171,13 +172,11 @@ class qformat_htmltable extends qformat_xml {
         return $content;
     }   // end presave_process
 
-
-    protected function debug_unlink($filename) {
-        // declare empty array to prevent each debug message from including a complete backtrace
-        $backtrace = array();
-
-        debugging("debug_unlink(\"" . $filename . "\")", DEBUG_DEVELOPER, $backtrace);
-        if (!debugging(null, DEBUG_DEVELOPER, null)) {
+    /*
+     * Delete temporary files if debugging disabled
+     */
+    private function debug_unlink($filename) {
+        if (!debugging(null, DEBUG_DEVELOPER)) {
             unlink($filename);
         }
     }
@@ -189,7 +188,7 @@ class qformat_htmltable extends qformat_xml {
      *
      * @return string
      */
-    protected function get_text_labels() {
+    private function get_text_labels() {
         $textstrings = array(
             'assignment' => array('uploaderror', 'uploadafile', 'uploadfiletoobig'),
             'grades' => array('item'),
@@ -217,6 +216,103 @@ class qformat_htmltable extends qformat_xml {
         $expout .= "</moodlelabels>";
 
         return $expout;
+    }
+    /**
+     * Clean HTML markup inside question text element content
+     *
+     * A string containing Moodle Question XML with clean HTML inside the text elements is returned
+     *
+     * @return string
+     */
+    private function clean_all_questions($input_string) {
+
+        debugging(__FUNCTION__ . "(input_string = " . str_replace("\n", "", substr($input_string, 0, 1000)) . " ...)", DEBUG_DEVELOPER);
+        // Start assembling the cleaned output string. First add the text before the first question
+        $found_category = preg_match('~(.*)<question~s', $input_string, $pre_question_match);
+        $clean_output_string =  "";
+
+        // Split the string into questions in order to check the text fields for clean HTML
+        $found_questions = preg_match_all('~(.*?)<question type="([^"]*)"[^>]*>(.*?)</question>~s', $input_string, $question_matches, PREG_SET_ORDER);
+        $n_questions = count($question_matches);
+        if ($found_questions === FALSE or $found_questions == 0) {
+            //debugging(__FUNCTION__ . ":" . __LINE__ . ": Cannot decompose questions", DEBUG_DEVELOPER);
+            echo $OUTPUT->notification(get_string('noquestions', 'qformat_wordtable'));
+            return $input_string;
+        }
+        //debugging(__FUNCTION__ . ":" . __LINE__ . ": " . $n_questions . " questions found", DEBUG_DEVELOPER);
+
+        // Split the questions into text strings to check the HTML
+        for ($i = 0; $i < $n_questions; $i++) {
+            //debugging(__FUNCTION__ . ":" . __LINE__ . ": pre-question = |" . $question_matches[$i][1] . "|", DEBUG_DEVELOPER);
+            //debugging(__FUNCTION__ . ":" . __LINE__ . ": post-question = |" . $question_matches[$i][4] . "|", DEBUG_DEVELOPER);
+            
+            $question_type = $question_matches[$i][2];
+            if ($question_type === 'category') {
+                $clean_output_string .= '<question type="category">' . $question_matches[$i][3] . "</question>";
+            } else {
+                // Standard question type with text fields, so split the question into chunks at CDATA boundaries, using an ungreedy search (?), and matching across newlines (s modifier)
+                $found_text_fields = preg_match_all('~(.*?)<\!\[CDATA\[(.*?)\]\]>~s', $question_matches[$i][3], $cdata_matches, PREG_SET_ORDER);
+                $n_text_fields = count($cdata_matches);
+                if ($found_text_fields === FALSE or $found_text_fields == 0) {
+                    //debugging(__FUNCTION__ . ":" . __LINE__ . ": Cannot decompose text elements in question", DEBUG_DEVELOPER);
+                    echo $OUTPUT->notification(get_string('noquestions', 'qformat_wordtable'));
+                    return $input_string;
+                }
+
+                // Before processing what's inside the CDATA section, add the question start tag
+                $clean_output_string .= '<question type="' . $question_type . '">';
+
+                // Process content of each CDATA section to clean the HTML
+                for ($j = 0; $j < $n_text_fields; $j++) {
+                    $cdata_content = $cdata_matches[$j][2];
+                    $clean_cdata_content = $this->clean_html_text($cdata_matches[$j][2]);
+
+                    // Add all the text before the first CDATA start boundary, and the cleaned string, to the output string
+                    $clean_output_string .= $cdata_matches[$j][1] . '<![CDATA[' . $clean_cdata_content . ']]>' ;
+                } // End CDATA section handling
+
+                // Add the text after the last CDATA section closing delimiter
+                $text_after_last_CDATA_string = substr($question_matches[$i][0], strrpos($question_matches[$i][0], "]]>") + 3);
+                $clean_output_string .= $text_after_last_CDATA_string;
+
+                //$clean_output_string .= $question_matches[$i];
+            }
+
+        } // End question element handling
+
+        debugging(__FUNCTION__ . "() -> " . substr($clean_output_string, 0, 1000) . "..." . substr($clean_output_string, -1000), DEBUG_DEVELOPER);
+        return $clean_output_string;
+}
+
+    /**
+     * Clean HTML content
+     *
+     * A string containing clean HTML is returned
+     *
+     * @return string
+     */
+    private function clean_html_text($text_content_string) {
+
+        // Check if Tidy extension loaded, and use it to clean the CDATA section if present
+        if (extension_loaded('tidy')) {
+            // cf. http://tidy.sourceforge.net/docs/quickref.html
+            $tidy_config = array(
+                'bare' => true, // Strip Microsoft Word 2000-specific markup
+                'clean' => true, // Replace presentational with structural tags 
+                'word-2000' => true, // Strip out other Microsoft Word gunk
+                'drop-font-tags' => true, // Discard font
+                'drop-proprietary-attributes' => true, // Discard font
+                'show-body-only'   => true,
+            );
+            $clean_html = tidy_repair_string($text_content_string, $tidy_config, 'utf8');
+        } else { // Tidy not available, so just strip most HTML tags except bold, italic, subscript and superscript
+            $clean_html = strip_tags($text_content_string, "<a><b><i><sub><sup>");
+        }
+
+        // Strip soft hyphens (0xAD, or decimal 173)
+        $clean_html = preg_replace('/\xad/u', '', $clean_html);
+            debugging(__FUNCTION__ . "() strip_tags -> |" . $clean_html . "|", DEBUG_DEVELOPER);
+        return $clean_html;
     }
 }
 ?>
