@@ -23,10 +23,10 @@
  * @package htmltable
  **/
 
-$plugin->version  = 2014042901;  // The current module version (Date: YYYYMMDDXX)
+$plugin->version  = 2014051401;  // The current module version (Date: YYYYMMDDXX)
 $plugin->maturity  = MATURITY_STABLE;  // Maturity level
 $plugin->component  = 'qformat_htmltable';  // Plugin name
-$plugin->release  = '1.2 (Build: 20140429)';  // The current module release in human-readable form (x.y)
+$plugin->release  = '1.4 (Build: 20140514)';  // The current module release in human-readable form (x.y)
 $plugin->requires = 2011070100.03;  // Requires Moodle 2.1 or later
 $plugin->cron     = 0;           // Period for cron to check this module (secs)
 

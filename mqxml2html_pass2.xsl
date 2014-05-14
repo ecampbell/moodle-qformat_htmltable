@@ -15,11 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
- * XSLT stylesheet to transform Moodle Question XML-formatted questions into Word-compatible HTML tables 
+ * XSLT stylesheet to process HTML-formatted text inside CDATA sections by embedding images
  *
  * @package questionbank
  * @subpackage importexport
- * @copyright 2010 Eoin Campbell
+ * @copyright 2014 Eoin Campbell
  * @author Eoin Campbell
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later (5)
 -->
@@ -29,6 +29,11 @@
 	xmlns="http://www.w3.org/1999/xhtml"
 	version="1.0">
 
+<xsl:param name="course_name"/>
+<xsl:param name="moodle_language" select="'en'"/> <!-- Interface language for user -->
+<xsl:param name="moodle_textdirection" select="'ltr'"/>  <!-- ltr/rtl, ltr except for Arabic, Hebrew, Urdu, Farsi, Maldivian (who knew?) -->
+<xsl:param name="transformationfailed"/> <!-- Error message to display in Word file if transformation fails -->
+
 <xsl:variable name="htmltemplate" select="/container/htmltemplate" />
 
 <xsl:variable name="ucase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
@@ -36,14 +41,16 @@
 <xsl:variable name="pluginfiles_string" select="'@@PLUGINFILE@@/'"/>
 <xsl:variable name="embeddedbase64_string" select="'data:image/'"/>
 
-<xsl:output method="xml" version="1.0" omit-xml-declaration="yes" encoding="ISO-8859-1" indent="yes" />
+<xsl:output method="xml" version="1.0" omit-xml-declaration="no" encoding="ISO-8859-1" indent="yes" />
 
-<!-- Read in the input XML into a variable, so that it can be processed -->
-<xsl:variable name="data" select="/container/htm:container" />
+<!-- Read in the input XML into a variable, and handle unusual situation where the inner container element doesn't have an explicit namespace declaration  -->
+<xsl:variable name="data" select="/container/*[local-name() = 'container']" />
 
-<!-- Match document root node, and read in and process Word-compatible XHTML template -->
+<!-- Match document root node, and read in and process XHTML template -->
 <xsl:template match="/">
-  <xsl:apply-templates select="$htmltemplate/*" mode="template"/>
+	<html lang="{translate($moodle_language, $ucase, $lcase)}" dir="{$moodle_textdirection}">
+		<xsl:apply-templates select="$htmltemplate/htm:html/*" />
+	</html>
 </xsl:template>
 
 <!-- Throw away extra wrapper elements included in container XML -->
@@ -53,6 +60,11 @@
 <xsl:template match="processing-instruction('replace')[.='insert-content']">
 	<!-- Handle the question tables -->
 	<xsl:apply-templates select="$data/htm:html/htm:body"/>
+
+	<!-- Check that the content has been successfully read in: if the title is empty, include an error message in the HTML file rather than leave it blank -->
+	<xsl:if test="$data/htm:html/htm:head/htm:title = ''">
+		<p class="MsoTitle"><xsl:value-of disable-output-escaping="yes" select="$transformationfailed"/></p>
+	</xsl:if>
 </xsl:template>
 
 <!-- Metadata -->
@@ -127,13 +139,6 @@
 
 <!-- Identity transformations -->
 <xsl:template match="*">
-	<xsl:element name="{name()}">
-		<xsl:call-template name="copyAttributes" />
-		<xsl:apply-templates select="node()"/>
-	</xsl:element>
-</xsl:template>
-<!-- Identity transformations -->
-<xsl:template match="*" mode="template">
 	<xsl:element name="{name()}">
 		<xsl:call-template name="copyAttributes" />
 		<xsl:apply-templates select="node()"/>
