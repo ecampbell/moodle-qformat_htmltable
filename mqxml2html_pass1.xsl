@@ -708,7 +708,7 @@
 			<xsl:if test="normalize-space(generalfeedback/text) != '' and normalize-space(generalfeedback/text) != '&#160;'">
 				<tr>
 					<th colspan="2" style="{$col2_2span_width}"><p class="TableRowHead"><xsl:value-of select="$generalfeedback_label"/></p></th>
-					<td colspan="2" style="{$col3_2span_width}"><xsl:apply-templates select="generalfeedback/text"/></td>
+					<td colspan="2" style="{$col3_2span_width}"><xsl:apply-templates select="generalfeedback/*"/></td>
 				</tr>
 				<xsl:text>&#x0a;</xsl:text>
 			</xsl:if>
@@ -982,25 +982,25 @@
 	
 	<xsl:choose>
 	<xsl:when test="contains($cloze_item, 'NUMERICAL')">
-		<u>
+		<span class="cloze_numerical"><u>
 			<xsl:call-template name="format_cloze_item">
 				<xsl:with-param name="cloze_item" select="substring-after($cloze_item, 'NUMERICAL:')"/>
 			</xsl:call-template>
-		</u>
+		</u></span>
 	</xsl:when>
 	<xsl:when test="contains($cloze_item, 'SHORTANSWER')">
-		<i>
+		<span class="cloze_shortanswer"><i>
 			<xsl:call-template name="format_cloze_item">
 				<xsl:with-param name="cloze_item" select="substring-after($cloze_item, 'SHORTANSWER:')"/>
 			</xsl:call-template>
-		</i>
+		</i></span>
 	</xsl:when>
 	<xsl:when test="contains($cloze_item, 'MULTICHOICE')">
-		<b>
+		<span class="cloze_multichoice"><b>
 			<xsl:call-template name="format_cloze_item">
 				<xsl:with-param name="cloze_item" select="substring-after($cloze_item, 'MULTICHOICE:')"/>
 			</xsl:call-template>
-		</b>
+		</b></span>
 	</xsl:when>
 	</xsl:choose>
 </xsl:template>
@@ -1020,6 +1020,10 @@
 		<xsl:value-of select="concat('data:image/', $image_file_suffix, ';', @encoding, ',')"/>
 	</xsl:variable>
 	<p class="ImageFile"><img src="{concat($image_format, .)}" title="{@name}"/></p>
+</xsl:template>
+
+<xsl:template match="file" mode="cloze">
+	<xsl:apply-templates select="."/>
 </xsl:template>
 
 <!-- got to preserve comments for style definitions -->
