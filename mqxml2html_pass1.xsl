@@ -646,7 +646,7 @@
 		<!-- Heading row for answers -->
 		<tr>
 			<xsl:choose>
-			<xsl:when test="$qtype = 'MA' or $qtype = 'MC'">
+			<xsl:when test="$qtype = 'ES' or $qtype = 'MA' or $qtype = 'MC'">
 				<td style="width: 1.0cm"><p class="TableHead" style="text-align: left;"><xsl:value-of select="$colheading1_label"/></p></td>
 				<td style="{$col2_width}"><p class="TableHead" style="text-align: left;"><xsl:value-of select="$colheading2_label"/></p></td>
 			</xsl:when>
@@ -654,8 +654,8 @@
 				<td colspan="2" style="{$col2_2span_width}"><p class="TableHead" style="text-align: left;"><xsl:value-of select="$colheading2_label"/></p></td>
 			</xsl:otherwise>
 			</xsl:choose>
-				<td style="{$col3_width}"><p class="TableHead" style="text-align: left;"><xsl:value-of select="$colheading3_label"/></p></td>
-				<td style="width: 1.0cm"><p class="TableHead" style="text-align: left;"><xsl:value-of select="$colheading4_label"/></p></td>
+			<td style="{$col3_width}"><p class="TableHead" style="text-align: left;"><xsl:value-of select="$colheading3_label"/></p></td>
+			<td style="width: 1.0cm"><p class="TableHead" style="text-align: left;"><xsl:value-of select="$colheading4_label"/></p></td>
 		</tr>
 		<xsl:text>&#x0a;</xsl:text>
 	</thead>
@@ -687,13 +687,13 @@
 						<p class="Cell"><xsl:value-of select="$blank_cell"/></p>
 					</xsl:when>
 					<xsl:when test="$moodle_release_number &gt; '24' and responsetemplate and normalize-space(responsetemplate) = ''">
-						<p class="Cell"><xsl:value-of select="$responsetemplate_help_label"/></p>
+						<p class="Cell"><xsl:value-of select="$blank_cell"/></p>
 					</xsl:when>
 					<xsl:when test="responsetemplate and responsetemplate/@format and responsetemplate/@format = 'html'">
-						<xsl:apply-templates select="responsetemplate"/>
+						<xsl:apply-templates select="responsetemplate/*"/>
 					</xsl:when>
 					<xsl:when test="responsetemplate and responsetemplate/@format and responsetemplate/@format != 'html'">
-						<p class="Cell"><xsl:apply-templates select="responsetemplate"/></p>
+						<p class="Cell"><xsl:apply-templates select="responsetemplate/*"/></p>
 					</xsl:when>
 					<xsl:otherwise>
 						<!-- No essay response template, so it's probably an older version of Moodle. -->
