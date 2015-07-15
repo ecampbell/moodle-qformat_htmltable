@@ -2,6 +2,8 @@ Release notes
 -------------
 
 Date          Version   Comment
+2015/07/15    1.4       Support 2.7+ Essay question enhancements, improve HTML clean-up, 
+                        handle paragraph style attributes better, add environment.xml
 2014/10/08    1.3       Handle images inside Cloze questions, and highlight Cloze question components in boxes.
 2014/07/28    1.2       Handle badly-formed question content much better by using HTMLTidy or strip_tags, etc.
 2014/02/03    1.1       Initial release.

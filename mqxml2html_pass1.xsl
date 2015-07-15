@@ -44,7 +44,9 @@
 	Essay:
 		1.9   - no grader info or response template
 		2.1-4 - grader info but no response template
-		2.5+  - grader info and response template
+		2.5+  - grader info, attachments and response template
+		2.7+  - number of required attachments field
+		2.9+  - response text required/optional field
 
 	Cloze:
 		2.1-3 - no per-hint options
@@ -54,18 +56,9 @@
 		1.9  - no hints or tags
 		2.1+ - hints and tags
 -->
-<xsl:variable name="moodle_release_number">
-	<xsl:choose>
-	<xsl:when test="starts-with($moodle_release, '1')"><xsl:text>1</xsl:text></xsl:when>
-	<xsl:when test="starts-with($moodle_release, '2.0')"><xsl:text>23</xsl:text></xsl:when>
-	<xsl:when test="starts-with($moodle_release, '2.1')"><xsl:text>23</xsl:text></xsl:when>
-	<xsl:when test="starts-with($moodle_release, '2.2')"><xsl:text>23</xsl:text></xsl:when>
-	<xsl:when test="starts-with($moodle_release, '2.3')"><xsl:text>23</xsl:text></xsl:when>
-	<xsl:when test="starts-with($moodle_release, '2.4')"><xsl:text>24</xsl:text></xsl:when>
-	<xsl:otherwise><xsl:text>25</xsl:text></xsl:otherwise>
-	</xsl:choose>
-</xsl:variable>
 
+<!-- Convert Moodle release numbers such as "2.4+" or "2.4.1" to "24" for easier numerical comparisons, to decide what question rows to include -->
+<xsl:variable name="moodle_release_number" select="translate(substring($moodle_release, 1, 4), '.+', '')"/>
 <!-- Text labels from translated Moodle files - now stored in the input XML file -->
 <xsl:variable name="moodle_labels" select="/container/moodlelabels"/>
 <!-- Base64-encoded image icons for each question type -->
@@ -86,7 +79,7 @@
 <xsl:variable name="categoryname_label" select="$moodle_labels/data[@name = 'moodle_categoryname']"/>
 <xsl:variable name="defaultmark_label">
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of select="concat($moodle_labels/data[@name = 'quiz_defaultgrade'], $colon_string)"/>
 	</xsl:when>
 	<xsl:otherwise><xsl:value-of select="concat($moodle_labels/data[@name = 'question_defaultmark'], $colon_string)"/></xsl:otherwise>
@@ -98,7 +91,7 @@
 <xsl:variable name="item_label" select="$moodle_labels/data[@name = 'grades_item']"/>
 <xsl:variable name="penalty_label">
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of select="concat($moodle_labels/data[@name = 'quiz_penaltyfactor'], $colon_string)"/>
 	</xsl:when>
 	<xsl:otherwise><xsl:value-of select="concat($moodle_labels/data[@name = 'question_penaltyforeachincorrecttry'], $colon_string)"/></xsl:otherwise>
@@ -107,7 +100,7 @@
 <xsl:variable name="question_label" select="$moodle_labels/data[@name = 'moodle_question']"/>
 <xsl:variable name="category_label">
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of select="$moodle_labels/data[@name = 'question_questioncategory']"/>
 	</xsl:when>
 	<xsl:otherwise><xsl:value-of select="$moodle_labels/data[@name = 'question_category']"/></xsl:otherwise>
@@ -124,7 +117,7 @@
 <xsl:variable name="feedback_label" select="$moodle_labels/data[@name = 'moodle_feedback']"/>
 <xsl:variable name="generalfeedback_label">
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of  select="concat($moodle_labels/data[@name = 'quiz_generalfeedback'], $colon_string)"/>
 	</xsl:when>
 	<xsl:otherwise>
@@ -179,7 +172,7 @@
 <!-- Description labels -->
 <xsl:variable name="description_instructions">
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of select="$moodle_labels/data[@name = 'qformat_wordtable_description_instructions']"/>
 	</xsl:when>
 	<xsl:otherwise><xsl:value-of select="$moodle_labels/data[@name = 'qtype_description_pluginnamesummary']"/></xsl:otherwise>
@@ -188,14 +181,17 @@
 
 <!-- Essay question labels -->
 <xsl:variable name="allowattachments_label" select="concat($moodle_labels/data[@name = 'qtype_essay_allowattachments'], $colon_string)"/>
+<xsl:variable name="attachmentsoptional_label" select="concat($moodle_labels/data[@name = 'qtype_essay_attachmentsoptional'], $colon_string)"/>
+<xsl:variable name="attachmentsrequired_label" select="concat($moodle_labels/data[@name = 'qtype_essay_attachmentsrequired'], $colon_string)"/>
 <xsl:variable name="graderinfo_label" select="$moodle_labels/data[@name = 'qtype_essay_graderinfo']"/>
 <xsl:variable name="responsetemplate_label" select="$moodle_labels/data[@name = 'qtype_essay_responsetemplate']"/>
 <xsl:variable name="responsetemplate_help_label" select="$moodle_labels/data[@name = 'qtype_essay_responsetemplate_help']"/>
 <xsl:variable name="responsefieldlines_label" select="concat($moodle_labels/data[@name = 'qtype_essay_responsefieldlines'], $colon_string)"/>
 <xsl:variable name="responseformat_label" select="concat($moodle_labels/data[@name = 'qtype_essay_responseformat'], $colon_string)"/>
+<xsl:variable name="responserequired_label" select="concat($moodle_labels/data[@name = 'qtype_essay_responserequired'], $colon_string)"/>
 <xsl:variable name="format_html_label">
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of select="$moodle_labels/data[@name = 'moodle_formathtml']"/>
 	</xsl:when>
 	<xsl:otherwise><xsl:value-of select="$moodle_labels/data[@name = 'qtype_essay_formateditor']"/></xsl:otherwise>
@@ -203,7 +199,7 @@
 </xsl:variable>
 <xsl:variable name="format_plain_label">
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of select="$moodle_labels/data[@name = 'moodle_formatplain']"/>
 	</xsl:when>
 	<xsl:otherwise><xsl:value-of select="$moodle_labels/data[@name = 'qtype_essay_formatplain']"/></xsl:otherwise>
@@ -217,7 +213,7 @@
 <xsl:variable name="format_markdown_label" select="$moodle_labels/data[@name = 'moodle_formatmarkdown']"/>
 <xsl:variable name="essay_instructions">
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of select="$moodle_labels/data[@name = 'qformat_wordtable_essay_instructions']"/>
 	</xsl:when>
 	<xsl:otherwise><xsl:value-of select="$moodle_labels/data[@name = 'qtype_essay_pluginnamesummary']"/></xsl:otherwise>
@@ -231,7 +227,7 @@
 <xsl:variable name="choice_label">
 	<xsl:variable name="choice_text" select="$moodle_labels/data[@name = 'qtype_multichoice_choiceno']"/>
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of select="$moodle_labels/data[@name = 'quiz_choice']"/>
 	</xsl:when>
 	<xsl:when test="contains($choice_text, '{')">
@@ -242,7 +238,7 @@
 </xsl:variable>
 <xsl:variable name="multichoice_instructions">
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of select="concat($moodle_labels/data[@name = 'qformat_wordtable_multichoice_instructions'], ' (MC/MA)')"/>
 	</xsl:when>
 	<xsl:otherwise><xsl:value-of select="concat($moodle_labels/data[@name = 'qtype_multichoice_pluginnamesummary'], ' (MC/MA)')"/></xsl:otherwise>
@@ -252,7 +248,7 @@
 <!-- Short Answer question labels -->
 <xsl:variable name="casesensitive_label">
 	<xsl:choose>
-	<xsl:when test="$moodle_release_number = '1'">
+	<xsl:when test="$moodle_release_number = '19'">
 		<xsl:value-of select="concat($moodle_labels/data[@name = 'quiz_casesensitive'], $colon_string)"/>
 	</xsl:when>
 	<xsl:otherwise><xsl:value-of select="concat($moodle_labels/data[@name = 'qtype_shortanswer_casesensitive'], $colon_string)"/></xsl:otherwise>
@@ -361,7 +357,7 @@
 
 	<!-- Penalty value units: fractions in Moodle 1.9, percent in Moodle 2-->
 	<xsl:variable name="penalty_units">
-		<xsl:if test="$moodle_release_number &gt; '1'">
+		<xsl:if test="$moodle_release_number &gt; '19'">
 			<xsl:value-of select="'%'"/>
 		</xsl:if>
 	</xsl:variable>
@@ -369,12 +365,12 @@
 	<!-- Simplify the penalty value to keep it short, to fit it in the 4th column -->
 	<xsl:variable name="penalty_value">
 		<xsl:choose>
-		<xsl:when test="$moodle_release_number = '1' and starts-with(penalty, '1')"><xsl:value-of select="concat('1', $penalty_units)"/></xsl:when>
-		<xsl:when test="$moodle_release_number = '1' and starts-with(penalty, '0.5')"><xsl:value-of select="concat('0.5', $penalty_units)"/></xsl:when>
-		<xsl:when test="$moodle_release_number = '1' and starts-with(penalty, '0.3333333')"><xsl:value-of select="concat('0.333', $penalty_units)"/></xsl:when>
-		<xsl:when test="$moodle_release_number = '1' and starts-with(penalty, '0.25')"><xsl:value-of select="concat('0.25', $penalty_units)"/></xsl:when>
-		<xsl:when test="$moodle_release_number = '1' and starts-with(penalty, '0.2')"><xsl:value-of select="concat('0.20', $penalty_units)"/></xsl:when>
-		<xsl:when test="$moodle_release_number = '1' and starts-with(penalty, '0.1')"><xsl:value-of select="concat('0.10', $penalty_units)"/></xsl:when>
+		<xsl:when test="$moodle_release_number = '19' and starts-with(penalty, '1')"><xsl:value-of select="concat('1', $penalty_units)"/></xsl:when>
+		<xsl:when test="$moodle_release_number = '19' and starts-with(penalty, '0.5')"><xsl:value-of select="concat('0.5', $penalty_units)"/></xsl:when>
+		<xsl:when test="$moodle_release_number = '19' and starts-with(penalty, '0.3333333')"><xsl:value-of select="concat('0.333', $penalty_units)"/></xsl:when>
+		<xsl:when test="$moodle_release_number = '19' and starts-with(penalty, '0.25')"><xsl:value-of select="concat('0.25', $penalty_units)"/></xsl:when>
+		<xsl:when test="$moodle_release_number = '19' and starts-with(penalty, '0.2')"><xsl:value-of select="concat('0.20', $penalty_units)"/></xsl:when>
+		<xsl:when test="$moodle_release_number = '19' and starts-with(penalty, '0.1')"><xsl:value-of select="concat('0.10', $penalty_units)"/></xsl:when>
 		<xsl:when test="starts-with(penalty, '1')"><xsl:value-of select="concat('100', $penalty_units)"/></xsl:when>
 		<xsl:when test="starts-with(penalty, '0.5')"><xsl:value-of select="concat('50', $penalty_units)"/></xsl:when>
 		<xsl:when test="starts-with(penalty, '0.3333333')"><xsl:value-of select="concat('33.3', $penalty_units)"/></xsl:when>
@@ -411,7 +407,7 @@
 	<xsl:variable name="colheading3_label">
 		<xsl:choose>
 		<xsl:when test="$qtype = 'DE'"><xsl:value-of select="$blank_cell"/></xsl:when>
-		<xsl:when test="$qtype = 'ES' and $moodle_release_number = '1'"><xsl:value-of select="$blank_cell"/></xsl:when>
+		<xsl:when test="$qtype = 'ES' and $moodle_release_number = '19'"><xsl:value-of select="$blank_cell"/></xsl:when>
 		<xsl:when test="$qtype = 'ES'"><xsl:value-of select="$graderinfo_label"/></xsl:when>
 		<xsl:when test="$qtype = 'MAT'"><xsl:value-of select="$answer_label"/></xsl:when>
 		<xsl:when test="$qtype = 'MA' or $qtype = 'MC' or $qtype = 'SA' or $qtype = 'TF'"><xsl:value-of select="$feedback_label"/></xsl:when>
@@ -443,7 +439,7 @@
 		</xsl:choose>
 	</xsl:variable>
 	<xsl:variable name="question_label">
-		<xsl:if test="$moodle_release_number &gt; '1'">
+		<xsl:if test="$moodle_release_number &gt; '19'">
 			<xsl:value-of select="concat(' (', $moodle_labels/data[@name = concat('qtype_', $question_type, '_pluginname')], ')')"/>
 		</xsl:if>
 	</xsl:variable>
@@ -514,7 +510,7 @@
 		</xsl:if>
 
 		<!-- Essay questions in Moodle 2.x have 3 specific fields, for Response field format, Attachments, and Number of lines -->
-		<xsl:if test="$qtype = 'ES' and $moodle_release_number &gt; '1'">
+		<xsl:if test="$qtype = 'ES' and $moodle_release_number &gt; '19'">
 			<tr>
 				<td colspan="3" style="width: 12.0cm"><p class="TableRowHead" style="text-align: right"><xsl:value-of select="$responseformat_label"/></p></td>
 					<td style="width: 1.0cm">
@@ -531,16 +527,16 @@
 							<xsl:when test="responseformat = 'editor'">
 								<xsl:value-of select="$format_html_label"/>
 							</xsl:when>
-							<xsl:when test="$moodle_release_number = '1' and questiontext/@format = 'markdown'">
+							<xsl:when test="$moodle_release_number = '19' and questiontext/@format = 'markdown'">
 								<xsl:value-of select="$format_markdown_label"/>
 							</xsl:when>
-							<xsl:when test="$moodle_release_number = '1' and questiontext/@format = 'moodle_auto_format'">
+							<xsl:when test="$moodle_release_number = '19' and questiontext/@format = 'moodle_auto_format'">
 								<xsl:value-of select="$format_auto_label"/>
 							</xsl:when>
-							<xsl:when test="$moodle_release_number = '1' and questiontext/@format = 'plain_text'">
+							<xsl:when test="$moodle_release_number = '19' and questiontext/@format = 'plain_text'">
 								<xsl:value-of select="$format_plain_label"/>
 							</xsl:when>
-							<xsl:when test="$moodle_release_number = '1' and questiontext/@format = 'html'">
+							<xsl:when test="$moodle_release_number = '19' and questiontext/@format = 'html'">
 								<xsl:value-of select="$format_html_label"/>
 							</xsl:when>
 							<xsl:otherwise><xsl:value-of select="$format_editor_label"/></xsl:otherwise>
@@ -548,6 +544,20 @@
 					</td>
 			</tr>
 			<xsl:text>&#x0a;</xsl:text>
+
+			<!-- Essays: text input required flag -->
+			<xsl:if test="$moodle_release_number &gt;= '29'">
+				<xsl:variable name="responserequired_flag">
+					<xsl:choose>
+					<xsl:when test="responserequired = 0"><xsl:value-of select="$no_label"/></xsl:when>
+					<xsl:otherwise><xsl:value-of select="$yes_label"/></xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+				<tr>
+					<td colspan="3" style="width: 12.0cm"><p class="TableRowHead" style="text-align: right"><xsl:value-of select="$responserequired_label"/></p></td>
+					<td style="width: 1.0cm"><p class="Cell"><xsl:value-of select="$responserequired_flag"/></p></td>
+				</tr>
+			</xsl:if>
 
 			<tr>
 				<td colspan="3" style="width: 12.0cm"><p class="TableRowHead" style="text-align: right"><xsl:value-of select="$responsefieldlines_label"/></p></td>
@@ -578,7 +588,26 @@
 					</td>
 			</tr>
 			<xsl:text>&#x0a;</xsl:text>
-		</xsl:if>
+
+			<!-- Essays: number of attachments required field -->
+			<xsl:if test="$moodle_release_number &gt;= '27'">
+				<xsl:text>&#x0a;</xsl:text>
+				<tr>
+					<td colspan="3" style="width: 12.0cm"><p class="TableRowHead" style="text-align: right"><xsl:value-of select="$attachmentsrequired_label"/></p></td>
+					<td style="width: 1.0cm">
+						<p class="Cell">
+							<xsl:choose>
+							<xsl:when test="attachmentsrequired">
+								<xsl:value-of select="attachmentsrequired"/>
+							</xsl:when>
+							<xsl:otherwise><xsl:text>0</xsl:text></xsl:otherwise>
+							</xsl:choose>
+						</p>
+					</td>
+				</tr>
+				<xsl:text>&#x0a;</xsl:text>
+			</xsl:if>
+		</xsl:if> <!-- 2.x Essay-specific question fields-->
 
 		<!-- Short answers: are they case-sensitive? -->
 		<xsl:if test="$qtype = 'SA'">
@@ -606,7 +635,7 @@
 		</xsl:if>
 
 		<!-- Show number of correct responses when finished (Moodle 2.x only). omit if No -->
-		<xsl:if test="shownumcorrect and ($qtype = 'MA' or $qtype = 'MAT') and $moodle_release_number &gt; '1'">
+		<xsl:if test="shownumcorrect and ($qtype = 'MA' or $qtype = 'MAT') and $moodle_release_number &gt; '19'">
 			<tr>
 				<td colspan="3" style="{$col2_2span_width}"><p class="TableRowHead" style="text-align: right"><xsl:value-of select="$shownumcorrectfeedback_label"/></p></td>
 				<td style="width: 1.0cm"><p class="Cell"><xsl:value-of select="$yes_label"/></p></td>
@@ -674,13 +703,13 @@
 				</td>
 				<td style="{$col3_width}">
 					<xsl:choose>
-					<xsl:when test="$moodle_release_number &gt; '1' and graderinfo and graderinfo = ''">
+					<xsl:when test="$moodle_release_number &gt; '19' and graderinfo and graderinfo = ''">
 						<p class="Cell"><xsl:value-of select="$blank_cell"/></p>
 					</xsl:when>
-					<xsl:when test="$moodle_release_number &gt; '1' and graderinfo and graderinfo/@format and graderinfo/@format = 'html'">
+					<xsl:when test="$moodle_release_number &gt; '19' and graderinfo and graderinfo/@format and graderinfo/@format = 'html'">
 						<xsl:apply-templates select="graderinfo/*"/>
 					</xsl:when>
-					<xsl:when test="$moodle_release_number &gt; '1' and graderinfo and graderinfo/@format and graderinfo/@format != 'html'">
+					<xsl:when test="$moodle_release_number &gt; '19' and graderinfo and graderinfo/@format and graderinfo/@format != 'html'">
 						<p class="Cell"><xsl:apply-templates select="graderinfo/*"/></p>
 					</xsl:when>
 					<xsl:otherwise>
@@ -743,7 +772,7 @@
 		</xsl:if>
 
 		<!-- Hints rows (added in Moodle 2.x) for CL MA MAT MC SA questions -->
-		<xsl:if test="$moodle_release_number &gt; '1'">
+		<xsl:if test="$moodle_release_number &gt; '19'">
 			<xsl:for-each select="hint[normalize-space(text) != '' and normalize-space(text) != '&#160;']">
 				<!-- Define a label for the hint text row (row 1 of 3) -->
 				<xsl:variable name="hint_number_label" select="concat(substring-before($hintn_label, '{no}'), position())"/>
