@@ -316,12 +316,16 @@
 <xsl:template match="question">
 	<xsl:variable name="qtype">
 		<xsl:choose>
+		<xsl:when test="@type = 'calculated'"><xsl:text>CA</xsl:text></xsl:when>
+		<xsl:when test="@type = 'calculatedmulti'"><xsl:text>CM</xsl:text></xsl:when>
+		<xsl:when test="@type = 'calculatedsimple'"><xsl:text>CS</xsl:text></xsl:when>
 		<xsl:when test="@type = 'cloze'"><xsl:text>CL</xsl:text></xsl:when>
 		<xsl:when test="@type = 'description'"><xsl:text>DE</xsl:text></xsl:when>
 		<xsl:when test="@type = 'essay'"><xsl:text>ES</xsl:text></xsl:when>
 		<xsl:when test="@type = 'matching'"><xsl:text>MAT</xsl:text></xsl:when>
 		<xsl:when test="@type = 'multichoice' and single = 'false'"><xsl:text>MA</xsl:text></xsl:when>
 		<xsl:when test="@type = 'multichoice' and single = 'true'"><xsl:text>MC</xsl:text></xsl:when>
+		<xsl:when test="@type = 'multichoiceset'"><xsl:text>MS</xsl:text></xsl:when>
 		<!-- Not really supported as yet -->
 		<xsl:when test="@type = 'numerical'"><xsl:text>NUM</xsl:text></xsl:when>
 		<xsl:when test="@type = 'shortanswer'"><xsl:text>SA</xsl:text></xsl:when>
@@ -384,7 +388,7 @@
 	<!-- Column heading 1 is blank if question is not numbered, otherwise it includes a #, and importantly, a list number reset style -->
 	<xsl:variable name="colheading1_label">
 		<xsl:choose>
-		<xsl:when test="$qtype = 'MA' or $qtype = 'MC'"><xsl:text>#</xsl:text></xsl:when>
+		<xsl:when test="$qtype = 'MA' or $qtype = 'MC' or $qtype = 'MS'"><xsl:text>#</xsl:text></xsl:when>
 		<xsl:otherwise><xsl:value-of select="$blank_cell"/></xsl:otherwise>
 		</xsl:choose>
 	</xsl:variable>
@@ -396,7 +400,7 @@
 		<xsl:when test="$qtype = 'DE'"><xsl:value-of select="$blank_cell"/></xsl:when>
 		<xsl:when test="$qtype = 'ES' and $moodle_release_number &gt; '24'"><xsl:value-of select="$responsetemplate_label"/></xsl:when>
 		<xsl:when test="$qtype = 'ES'"><xsl:value-of select="$blank_cell"/></xsl:when>
-		<xsl:when test="$qtype = 'MA' or $qtype = 'MC'"><xsl:value-of select="$choice_label"/></xsl:when>
+		<xsl:when test="$qtype = 'MA' or $qtype = 'MC' or $qtype = 'MS'"><xsl:value-of select="$choice_label"/></xsl:when>
 		<xsl:when test="$qtype = 'MAT'"><xsl:value-of select="$question_label"/></xsl:when>
 		<xsl:when test="$qtype = 'SA'"><xsl:value-of select="$answers_label"/></xsl:when>
 		<xsl:otherwise><xsl:value-of select="$answers_label"/></xsl:otherwise>
@@ -410,7 +414,7 @@
 		<xsl:when test="$qtype = 'ES' and $moodle_release_number = '19'"><xsl:value-of select="$blank_cell"/></xsl:when>
 		<xsl:when test="$qtype = 'ES'"><xsl:value-of select="$graderinfo_label"/></xsl:when>
 		<xsl:when test="$qtype = 'MAT'"><xsl:value-of select="$answer_label"/></xsl:when>
-		<xsl:when test="$qtype = 'MA' or $qtype = 'MC' or $qtype = 'SA' or $qtype = 'TF'"><xsl:value-of select="$feedback_label"/></xsl:when>
+		<xsl:when test="$qtype = 'MA' or $qtype = 'MC' or $qtype = 'MS' or $qtype = 'SA' or $qtype = 'TF'"><xsl:value-of select="$feedback_label"/></xsl:when>
 		<xsl:otherwise><xsl:value-of select="$blank_cell"/></xsl:otherwise>
 		</xsl:choose>
 	</xsl:variable>
@@ -418,7 +422,7 @@
 	<!-- Grade column heading, or blank if no grade (CL, DE, ES, MAT) -->
 	<xsl:variable name="colheading4_label">
 		<xsl:choose>
-		<xsl:when test="$qtype = 'MA' or $qtype = 'MC' or $qtype = 'SA' or $qtype = 'TF'">
+		<xsl:when test="$qtype = 'MA' or $qtype = 'MC' or $qtype = 'MS' or $qtype = 'SA' or $qtype = 'TF'">
 			<xsl:value-of select="$grade_label"/>
 		</xsl:when>
 		<xsl:otherwise><xsl:value-of select="$blank_cell"/></xsl:otherwise>
@@ -486,7 +490,7 @@
 
 		<!-- Handle heading rows for various metadata specific to each question -->
 		<!-- Default mark / Default grade / Question weighting, i.e. total marks available for question -->
-		<xsl:if test="$qtype = 'ES' or $qtype = 'MA' or $qtype = 'MAT' or $qtype = 'MC' or $qtype = 'SA' or $qtype = 'TF'">
+		<xsl:if test="$qtype != 'CL' and $qtype != 'DE'">
 			<tr>
 				<td colspan="3" style="width: 12.0cm"><p class="TableRowHead" style="text-align: right"><xsl:value-of select="$defaultmark_label"/></p></td>
 					<td style="width: 1.0cm"><p class="Cell"><xsl:value-of select="$weight"/></p></td>
@@ -501,7 +505,7 @@
 			</tr>
 			<xsl:text>&#x0a;</xsl:text>
 		</xsl:if>
-		<xsl:if test="$qtype = 'MA' or $qtype = 'MC'">
+		<xsl:if test="$qtype = 'MA' or $qtype = 'MC' or $qtype = 'MS'">
 			<tr>
 				<td colspan="3" style="width: 12.0cm"><p class="TableRowHead" style="text-align: right"><xsl:value-of select="$mcq_shuffleanswers_label"/></p></td>
 					<td style="width: 1.0cm"><p class="Cell"><xsl:value-of select="$shuffleanswers_flag"/></p></td>
@@ -626,7 +630,7 @@
 		</xsl:if>
 
 		<!-- Penalty for each incorrect try: Don't include for True/False, as it is always 100% in this case -->
-		<xsl:if test="$qtype = 'CL' or $qtype = 'MA' or $qtype = 'MAT' or $qtype = 'MC' or $qtype = 'SA'">
+		<xsl:if test="$qtype = 'CL' or $qtype = 'MA' or $qtype = 'MAT' or $qtype = 'MC' or $qtype = 'MS' or $qtype = 'SA'">
 			<tr>
 				<td colspan="3" style="width: 12.0cm"><p class="TableRowHead" style="text-align: right"><xsl:value-of select="$penalty_label"/></p></td>
 					<td style="width: 1.0cm"><p class="Cell"><xsl:value-of select="$penalty_value"/></p></td>
@@ -635,7 +639,7 @@
 		</xsl:if>
 
 		<!-- Show number of correct responses when finished (Moodle 2.x only). omit if No -->
-		<xsl:if test="shownumcorrect and ($qtype = 'MA' or $qtype = 'MAT') and $moodle_release_number &gt; '19'">
+		<xsl:if test="shownumcorrect and ($qtype = 'MA' or $qtype = 'MAT' or $qtype = 'MS') and $moodle_release_number &gt; '19'">
 			<tr>
 				<td colspan="3" style="{$col2_2span_width}"><p class="TableRowHead" style="text-align: right"><xsl:value-of select="$shownumcorrectfeedback_label"/></p></td>
 				<td style="width: 1.0cm"><p class="Cell"><xsl:value-of select="$yes_label"/></p></td>
@@ -646,7 +650,7 @@
 		<!-- Heading row for answers -->
 		<tr>
 			<xsl:choose>
-			<xsl:when test="$qtype = 'ES' or $qtype = 'MA' or $qtype = 'MC'">
+			<xsl:when test="$qtype = 'ES' or $qtype = 'MA' or $qtype = 'MC' or $qtype = 'MS'">
 				<td style="width: 1.0cm"><p class="TableHead" style="text-align: left;"><xsl:value-of select="$colheading1_label"/></p></td>
 				<td style="{$col2_width}"><p class="TableHead" style="text-align: left;"><xsl:value-of select="$colheading2_label"/></p></td>
 			</xsl:when>
@@ -733,7 +737,7 @@
 		<xsl:text>&#x0a;</xsl:text>
 
 		<!-- General feedback for all question types: MA, MAT, MC, TF, SA -->
-		<xsl:if test="$qtype = 'CL' or $qtype = 'DE' or $qtype = 'ES' or $qtype = 'MC' or $qtype = 'MA' or $qtype = 'MAT' or $qtype = 'SA' or $qtype = 'TF'">
+		<xsl:if test="$qtype != 'DE'">
 			<xsl:if test="normalize-space(generalfeedback/text) != '' and normalize-space(generalfeedback/text) != '&#160;'">
 				<tr>
 					<th colspan="2" style="{$col2_2span_width}"><p class="TableRowHead"><xsl:value-of select="$generalfeedback_label"/></p></th>
@@ -744,7 +748,7 @@
 		</xsl:if>
 
 		<!-- Correct and Incorrect feedback for MA, MAT and MC questions only -->
-		<xsl:if test="$qtype = 'MA' or $qtype = 'MAT' or $qtype = 'MC'">
+		<xsl:if test="$qtype = 'MA' or $qtype = 'MAT' or $qtype = 'MC' or $qtype = 'MS'">
 			<xsl:if test="normalize-space(correctfeedback/text) != '' and normalize-space(correctfeedback/text) != '&#160;'">
 				<tr>
 					<th colspan="2" style="{$col2_2span_width}"><p class="TableRowHead"><xsl:value-of select="$correctfeedback_label"/></p></th>
@@ -784,7 +788,7 @@
 				</tr>
 				<xsl:text>&#x0a;</xsl:text>
 				<!-- Most question types allow for some fields on the behaviour of hints, but SA doesn't, and CL only in 2.4+ -->
-				<xsl:if test="($qtype = 'MA' or $qtype = 'MAT' or $qtype = 'MC') or ($qtype = 'CL' and $moodle_release_number &gt; '23')">
+				<xsl:if test="($qtype = 'MA' or $qtype = 'MAT' or $qtype = 'MC' or $qtype = 'MS') or ($qtype = 'CL' and $moodle_release_number &gt; '23')">
 					<tr>
 						<th colspan="2" style="{$col2_2span_width}"><p class="TableRowHead"><xsl:value-of select="concat($hint_clearwrongparts_label, ' (', $hint_number_label, ')', $colon_string)"/></p></th>
 						<td colspan="2" style="{$col3_2span_width}"><p class="Cell">

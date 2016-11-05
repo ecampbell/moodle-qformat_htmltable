@@ -247,7 +247,8 @@ class qformat_htmltable extends qformat_xml {
             }
         }
         $expout .= "</moodlelabels>";
-
+        // Convert HTML to XHTML markup, needed in Polish
+        $expout = str_replace("<br>", "<br/>", $expout);
         return $expout;
     }
 

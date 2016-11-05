@@ -19,15 +19,15 @@
  * This fragment is called by moodle_needs_upgrading() and /admin/index.php
  *
  * @package    qformat_htmltable
- * @copyright  2014-2015 Eoin Campbell
+ * @copyright  2014-2016 Eoin Campbell
  * @author     Eoin Campbell
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later (5)
  **/
 
-$plugin->version  = 2015071501;  // The current module version (Date: YYYYMMDDXX)
+$plugin->version  = 2016110501;  // The current module version (Date: YYYYMMDDXX)
 $plugin->maturity  = MATURITY_STABLE;  // Maturity level
 $plugin->component  = 'qformat_htmltable';  // Plugin name
-$plugin->release  = '1.4 (Build: 20150715)';  // The current module release in human-readable form (x.y)
+$plugin->release  = '1.4 (Build: 20161105)';  // The current module release in human-readable form (x.y)
 $plugin->requires = 2011070100.03;  // Requires Moodle 2.1 or later
 $plugin->cron     = 0;           // Period for cron to check this module (secs)
 

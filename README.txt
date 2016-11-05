@@ -2,6 +2,7 @@ Release notes
 -------------
 
 Date          Version   Comment
+2016/11/05    1.5       Support Calculated and Multichoiceset questions, improve support for Polish export
 2015/07/15    1.4       Support 2.7+ Essay question enhancements, improve HTML clean-up, 
                         handle paragraph style attributes better, add environment.xml
 2014/10/08    1.3       Handle images inside Cloze questions, and highlight Cloze question components in boxes.
